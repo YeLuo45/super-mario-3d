@@ -16,6 +16,7 @@ class Mario {
         this.isInvincible = false;
         this.invincibleTimer = 0;
         this.mesh = null;
+        this.onGoal = null; // 到达终点回调
     }
 
     createMesh() {

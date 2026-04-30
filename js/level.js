@@ -188,7 +188,9 @@ class Level {
                 max: { x: this.goal.position.x + 0.5, y: this.goal.position.y + 2, z: 0.5 }
             };
             if (this.aabbIntersect(pb, gb)) {
-                console.log('Level Complete!');
+                if (player.onGoal) {
+                    player.onGoal();
+                }
             }
         }
     }

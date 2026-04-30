@@ -85,6 +85,9 @@ class Game {
         this.level.load(Level.getDefaultLevel());
         this.scene.add(this.level.createMeshes());
 
+        // 终点回调
+        this.player.onGoal = () => this.onLevelComplete();
+
         // 输入事件
         this.setupInput();
 
@@ -161,6 +164,17 @@ class Game {
         if (this.hud) {
             document.getElementById('hud-coins').textContent = `COINS: ${this.coins}`;
             document.getElementById('hud-score').textContent = `SCORE: ${this.score}`;
+        }
+    }
+
+    onLevelComplete() {
+        this.running = false;
+        audioManager.playLevelComplete();
+        if (this.hud) {
+            const completeDiv = document.createElement('div');
+            completeDiv.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);font-size:48px;color:#FFD700;text-shadow:3px 3px 6px #000;z-index:1000;';
+            completeDiv.textContent = 'LEVEL COMPLETE!';
+            document.body.appendChild(completeDiv);
         }
     }
 

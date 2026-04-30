@@ -71,6 +71,14 @@ class AudioManager {
         this.playTone(800, 0.08, 'square', 0.15);
         setTimeout(() => this.playTone(200, 0.1, 'square', 0.12), 40);
     }
+
+    playLevelComplete() {
+        if (!this.initialized) this.init();
+        const notes = [523, 659, 784, 1047];
+        notes.forEach((freq, i) => {
+            setTimeout(() => this.playTone(freq, 0.2, 'square', 0.12), i * 150);
+        });
+    }
 }
 
 const audioManager = new AudioManager();

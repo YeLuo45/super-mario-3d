@@ -27,13 +27,20 @@ class Enemy {
 
     update(dt, player, level) {
         if (this.state === 'dead') return;
+
+        // 重力
         this.velocity.y -= this.gravity * dt;
+
         this.updateAI(dt, player);
+
+        // 水平移动
         this.position.x += this.velocity.x * dt;
+
+        // 垂直移动
         this.position.y += this.velocity.y * dt;
 
-        const onGround = this.checkOnGround(level);
-        if (onGround && this.velocity.y < 0) this.velocity.y = 0;
+        // 地板碰撞解析
+        this.resolveFloorCollision(level);
 
         if (this.state === 'patrol') {
             if (this.position.x <= this.patrolLeft) {
@@ -48,6 +55,24 @@ class Enemy {
         if (this.mesh) {
             this.mesh.position.copy(this.position);
             this.mesh.scale.x = this.facingRight ? 1 : -1;
+        }
+    }
+
+    resolveFloorCollision(level) {
+        if (this.velocity.y > 0) return; // 上升中不处理
+
+        const footY = this.position.y - this.height / 2;
+        for (const platform of level.platforms) {
+            if (this.position.x >= platform.bounds.min.x - this.width / 2 &&
+                this.position.x <= platform.bounds.max.x + this.width / 2) {
+                const groundTop = platform.bounds.max.y;
+                if (footY < groundTop && footY > groundTop - 0.5) {
+                    // 穿透到地面以下，移动回去
+                    this.position.y = groundTop + this.height / 2;
+                    this.velocity.y = 0;
+                    return;
+                }
+            }
         }
     }
 

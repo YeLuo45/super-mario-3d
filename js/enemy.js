@@ -11,7 +11,7 @@ class Enemy {
         this.moveSpeed = 2;
         this.width = 0.8;
         this.height = 0.8;
-        this.gravity = 25;
+        this.gravity = 20;  // 降低重力，避免高速穿透
         this.mesh = null;
         this.facingRight = false;
     }

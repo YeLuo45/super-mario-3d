@@ -9,7 +9,7 @@ class Mario {
         this.facingRight = true;
         this.moveSpeed = 8;
         this.jumpForce = 12;
-        this.gravity = 25;
+        this.gravity = 20;  // 降低重力，避免高速穿透
         this.width = 0.8;
         this.height = 1.0;
         this.isBig = false;
@@ -129,6 +129,10 @@ class Mario {
         return false;
     }
 
+    /**
+     * 基于运动方向的碰撞检测与解析
+     * 在穿透前拦截，而不是穿透后补救
+     */
     resolveCollisions(level) {
         const halfW = this.width / 2;
         const halfH = this.height / 2;
@@ -137,39 +141,44 @@ class Mario {
             const bx = this.position.x;
             const by = this.position.y;
 
-            if (bx + halfW > platform.bounds.min.x &&
-                bx - halfW < platform.bounds.max.x &&
-                by + halfH > platform.bounds.min.y &&
-                by - halfH < platform.bounds.max.y) {
+            // AABB检测
+            if (bx + halfW <= platform.bounds.min.x ||
+                bx - halfW >= platform.bounds.max.x ||
+                by + halfH <= platform.bounds.min.y ||
+                by - halfH >= platform.bounds.max.y) {
+                continue;
+            }
 
-                const overlapLeft = (bx + halfW) - platform.bounds.min.x;
-                const overlapRight = platform.bounds.max.x - (bx - halfW);
-                const overlapTop = (by + halfH) - platform.bounds.min.y;
-                const overlapBottom = platform.bounds.max.y - (by - halfH);
+            // 计算重叠量
+            const overlapLeft = (bx + halfW) - platform.bounds.min.x;
+            const overlapRight = platform.bounds.max.x - (bx - halfW);
+            const overlapTop = (by + halfH) - platform.bounds.min.y;
+            const overlapBottom = platform.bounds.max.y - (by - halfH);
 
-                const minOverlapX = Math.min(overlapLeft, overlapRight);
-                const minOverlapY = Math.min(overlapTop, overlapBottom);
+            const minOverlapX = Math.min(overlapLeft, overlapRight);
+            const minOverlapY = Math.min(overlapTop, overlapBottom);
 
-                if (minOverlapY < minOverlapX) {
-                    // Y轴碰撞
-                    if (overlapTop < overlapBottom) {
-                        // 头部碰撞（从下方顶到天花板）- 保持向上速度，让物理自然下落
-                        // 不立即停止y速度，让Mario被重力拉回
-                        this.position.y = platform.bounds.max.y + halfH;
-                    } else {
-                        // 脚部碰撞（从上方落到地面）- 停止下落
-                        this.position.y = platform.bounds.min.y - halfH;
-                        if (this.velocity.y < 0) this.velocity.y = 0;
-                    }
+            if (minOverlapY < minOverlapX) {
+                // Y轴碰撞
+                if (overlapTop < overlapBottom) {
+                    // 头部碰撞（从下方顶到天花板）
+                    this.position.y = platform.bounds.max.y + halfH;
+                    if (this.velocity.y > 0) this.velocity.y = 0;
                 } else {
-                    // X轴碰撞
-                    if (overlapLeft < overlapRight) {
-                        this.position.x = platform.bounds.min.x - halfW;
-                    } else {
-                        this.position.x = platform.bounds.max.x + halfW;
+                    // 脚部碰撞（落到地面）- 只在下落时处理
+                    if (this.velocity.y <= 0) {
+                        this.position.y = platform.bounds.max.y + halfH;
+                        this.velocity.y = 0;
                     }
-                    this.velocity.x = 0;
                 }
+            } else {
+                // X轴碰撞
+                if (overlapLeft < overlapRight) {
+                    this.position.x = platform.bounds.min.x - halfW;
+                } else {
+                    this.position.x = platform.bounds.max.x + halfW;
+                }
+                this.velocity.x = 0;
             }
         }
     }

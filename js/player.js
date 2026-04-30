@@ -3,7 +3,7 @@
  */
 class Mario {
     constructor() {
-        this.position = new THREE.Vector3(0, 1, 0);
+        this.position = new THREE.Vector3(0, 0.5, 0);  // 站在地面上
         this.velocity = new THREE.Vector3(0, 0, 0);
         this.state = 'idle';
         this.facingRight = true;
@@ -114,10 +114,14 @@ class Mario {
 
     checkOnGround(level) {
         const footY = this.position.y - this.height / 2;
+        // 使用较小的容差值，更精确地检测地面
+        const tolerance = 0.15;
         for (const platform of level.platforms) {
-            if (this.position.x >= platform.bounds.min.x - this.width / 2 &&
-                this.position.x <= platform.bounds.max.x + this.width / 2) {
-                if (footY <= platform.bounds.max.y + 0.1 && footY >= platform.bounds.max.y - 0.2) {
+            // 检查Mario是否在平台上方附近
+            if (this.position.x + this.width / 2 > platform.bounds.min.x &&
+                this.position.x - this.width / 2 < platform.bounds.max.x) {
+                // footY 略高于平台顶部，或者几乎在平台顶部
+                if (footY >= platform.bounds.max.y - tolerance && footY <= platform.bounds.max.y + 0.05) {
                     return true;
                 }
             }
@@ -147,14 +151,18 @@ class Mario {
                 const minOverlapY = Math.min(overlapTop, overlapBottom);
 
                 if (minOverlapY < minOverlapX) {
+                    // Y轴碰撞
                     if (overlapTop < overlapBottom) {
+                        // 头部碰撞（从下方顶到天花板）- 保持向上速度，让物理自然下落
+                        // 不立即停止y速度，让Mario被重力拉回
                         this.position.y = platform.bounds.max.y + halfH;
-                        if (this.velocity.y > 0) this.velocity.y = 0;
                     } else {
+                        // 脚部碰撞（从上方落到地面）- 停止下落
                         this.position.y = platform.bounds.min.y - halfH;
                         if (this.velocity.y < 0) this.velocity.y = 0;
                     }
                 } else {
+                    // X轴碰撞
                     if (overlapLeft < overlapRight) {
                         this.position.x = platform.bounds.min.x - halfW;
                     } else {
@@ -184,7 +192,7 @@ class Mario {
             audioManager.playBump();
         } else {
             audioManager.playDeath();
-            this.position.set(0, 1, 0);
+            this.position.set(0, 0.5, 0);  // 重生位置
             this.velocity.set(0, 0, 0);
         }
     }
